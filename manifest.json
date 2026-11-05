@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "DO Inspector HP",
-  "description": "Optional writing assistance for HotelPlanner agents: live note preview, approved abbreviations and reviewed corrections.",
-  "version": "1.4.0",
+  "description": "Offline agent writing assistant for HotelPlanner with optional grammar suggestions and approved abbreviations.",
+  "version": "1.5.0",
   "action": {
     "default_popup": "popup.html",
     "default_title": "DO Inspector HP"
@@ -30,5 +30,15 @@
     }
   ],
   "icons": {},
-  "web_accessible_resources": []
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "harper-worker.js"
+      ],
+      "matches": [
+        "https://www.hotelplanner.com/*",
+        "https://hotelplanner.com/*"
+      ]
+    }
+  ]
 }
