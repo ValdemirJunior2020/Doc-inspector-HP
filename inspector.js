@@ -125,10 +125,28 @@ function suggestForField(t) {
   el("di-status").textContent="Suggested correction ready. Accept with Apply to field, or Reject to leave notes unchanged.";
   el("di-suggestion-actions").hidden=false;
 }
-function conservativeImprove(note){
+function normalizeAllCaps(note) {
+  const letters=(note.match(/[A-Za-z]/g)||[]);
+  if(letters.length<9)return note;
+  const upper=letters.filter(ch=>ch===ch.toUpperCase()).length;
+  if(upper/letters.length<0.8)return note;
+  const approved=new Set(Object.keys(dictionary()).map(x=>x.toUpperCase()));
+  const protectedTokens=/\bH\d{8}\b|\b[A-Z]{1,5}\d[A-Z0-9]*\b|\b(?:IP|SMS|FOC|URL|USD|HTML|API)\b/gi;
+  const tokens=[];
+  let masked=note.replace(protectedTokens,match=>{tokens.push(match);return "\uE000"+(tokens.length-1)+"\uE001";});
+  masked=masked.toLowerCase().replace(/\b[a-z][a-z’']*\b/g,token=>approved.has(token.toUpperCase())?token.toUpperCase():token);
+  masked=masked.replace(/\uE000(\d+)\uE001/g,(_,i)=>tokens[Number(i)]);
+  return masked;
+}
+function conservativeImprove(note) {
   if(settings.expand)note=expand(note);
-  return note.trim().replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ").replace(/\s+([,.;!?])/g,"$1").split("\n")
-    .map(line=>{line=line.trim().replace(/\bi\b/g,"I").replace(/(^|[.!?]\s+)([a-z])/g,(_,p,ch)=>p+ch.toUpperCase());if(/[A-Za-z0-9)]$/.test(line))line+=".";return line}).join("\n");
+  note=normalizeAllCaps(note).trim().replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ").replace(/\s+([,;!?])/g,"$1");
+  return note.split("\n").map(line=>{
+    line=line.trim().replace(/\bi\b/g,"I");
+    line=line.replace(/(^|[.!?]\s+)([a-z])/g,(_,p,ch)=>p+ch.toUpperCase());
+    if(/[A-Za-z0-9)]$/.test(line))line+=".";
+    return line;
+  }).join("\n");
 }
 function isReservationPage(){
   return location.hostname.toLowerCase().replace(/^www\./,"")==="hotelplanner.com" &&
