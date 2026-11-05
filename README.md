@@ -70,3 +70,8 @@ The extension, popup, panel, settings and packaged artifact use the official dis
 The Harper worker sends a corrected draft back to the inspector instead of sending informational error messages only. The worker offers conservative single-word spelling fixes, with fallback corrections for common errors such as `upsett`, `becuz`, `tryed`, `answerd`, `refunnd`, and `tommorow`. Approved abbreviations, monetary amounts and H-prefixed itinerary numbers are protected. The agent's original note is never changed without Accept and Apply; delayed suggestions cannot overwrite an agent-edited or rejected draft.
 
 This is not a full AI rewrite; context-dependent grammar and punctuation may still require agent review.
+
+## v1.5.6 — Reliable spelling in the improved draft
+The improved draft now applies a conservative set of common spelling corrections directly in the page, before optional Harper checking. This means short agent notes and test phrases such as "GST WAS UPSETT BECUZ I TRYED TO CALL FD BUT NOBODY ANSWERD" can display corrected spelling even when Harper cannot initialize. Added regression tests; original notes still require explicit agent acceptance before replacement.
+
+**Engine decision:** Keep the existing Harper offline engine optional rather than introducing OpenGrammar, a LanguageTool server, or a separate desktop program into a Chrome extension used during live calls. No network endpoint or personal guest text is sent to a third party. Domain abbreviations and itinerary IDs remain protected. Not every typo, tense, or punctuation issue is automatically fixable; agents review the draft.
