@@ -65,7 +65,25 @@ panel.querySelectorAll("nav button").forEach(button=>button.onclick=()=>{panel.q
 const editable=t=>t instanceof HTMLTextAreaElement&&!t.readOnly&&!t.disabled || t instanceof HTMLInputElement&&t.type==="text"&&!t.readOnly&&!t.disabled || t instanceof HTMLElement&&t.isContentEditable&&!t.closest("#di-panel");
 const value=t=>t instanceof HTMLTextAreaElement||t instanceof HTMLInputElement?t.value:t.innerText;
 function setValue(target,v){if(target instanceof HTMLTextAreaElement)Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,"value").set.call(target,v);else if(target instanceof HTMLInputElement)Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set.call(target,v);else target.innerText=v;target.dispatchEvent(new Event("input",{bubbles:true}));target.dispatchEvent(new Event("change",{bubbles:true}));}
-function selectField(t){field=t;original=value(t);el("di-source").value=original;el("di-field-label").textContent=(t.getAttribute("aria-label")||t.getAttribute("placeholder")||t.getAttribute("name")||t.id||"Editable field").slice(0,70);el("di-status").textContent="Field selected. No changes made.";}
+function selectField(t){
+  field=t;syncOriginalField(t);
+  el("di-field-label").textContent=(t.getAttribute("aria-label")||t.getAttribute("placeholder")||t.getAttribute("name")||t.id||"Editable field").slice(0,70);
+  el("di-status").textContent="Note field connected. Original notes mirror HotelPlanner live.";
+}
+function syncOriginalField(t) {
+  if(!t||!t.isConnected||!editable(t)||panel.contains(t))return;
+  const current=value(t);
+  if(field!==t)field=t;
+  if(el("di-source").value===current)return;
+  original=current;
+  el("di-source").value=current;
+  // A previously generated draft is now out of date; never allow a stale correction.
+  el("di-draft").value="";
+  el("di-suggestion-actions").hidden=true;
+  lastSuggestionKey="";
+  el("di-results").textContent="Agent notes updated. The suggestion will refresh when typing pauses.";
+}
+
 function pickClick(event){const t=event.target.closest?.("textarea,input,[contenteditable]")||event.target;if(!editable(t)||panel.contains(t))return;event.preventDefault();event.stopPropagation();document.removeEventListener("click",pickClick,true);picking=false;el("di-pick").textContent="Select field";selectField(t);visible();}
 el("di-pick").onclick=()=>{picking=true;hidden();el("di-pick").textContent="Picking…";document.addEventListener("click",pickClick,true)};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&picking){picking=false;document.removeEventListener("click",pickClick,true);el("di-pick").textContent="Select field";visible();}});
@@ -90,7 +108,9 @@ function suggestForField(t) {
   if(text.length<8||parseHistory(text).length>0)return;
   const key=text+"|"+(t.getAttribute("name")||t.id||"");
   if(key===lastSuggestionKey)return;
-  lastSuggestionKey=key; selectField(t);
+  lastSuggestionKey=key;
+  if(field!==t)selectField(t);
+  else syncOriginalField(t);
   const improved=conservativeImprove(text);
   if(improved===text)return;
   el("di-draft").value=improved;
@@ -132,6 +152,7 @@ function autoReview(event){
   if(!isLikelyNoteEditor(t))return;
   dirtyField=t;
   if(field!==t)selectField(t);
+  else syncOriginalField(t);
   if(!panel.classList.contains("di-visible"))visible();
   clearTimeout(noteTimer);
   // Avoid interruptions while composing a note; suggest after a substantial pause.
@@ -142,6 +163,7 @@ document.addEventListener("focusin",event=>{
   // The browser toolbar popup cannot be programmatically opened; open our in-page inspector instead.
   dirtyField=event.target;
   if(field!==dirtyField)selectField(dirtyField);
+  else syncOriginalField(dirtyField);
   visible();
   el("di-status").textContent="Notes editor detected. Keep typing; correction is suggested after you pause.";
 },true);
