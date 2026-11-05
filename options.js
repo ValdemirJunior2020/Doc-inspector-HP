@@ -1,0 +1,4 @@
+const DEFAULT_CHECKS=["Reason for contact","Who was contacted (if applicable)","Actions actually taken","Outcome / current status","Next step and responsible party (if unresolved)"];
+const $ = id => document.getElementById(id);
+chrome.storage.sync.get({auto:false,expand:false,privacy:true,checks:DEFAULT_CHECKS,custom:""},v=>{$("auto").checked=v.auto;$("expand").checked=v.expand;$("privacy").checked=v.privacy;$("checks").value=v.checks.join("\n");$("custom").value=v.custom;});
+$("save").onclick=()=>{const checks=$("checks").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,25);chrome.storage.sync.set({auto:$("auto").checked,expand:$("expand").checked,privacy:$("privacy").checked,checks,custom:$("custom").value.slice(0,5000)},()=>{$("status").textContent=chrome.runtime.lastError?.message||"Settings saved";});};
