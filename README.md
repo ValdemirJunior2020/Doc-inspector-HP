@@ -85,3 +85,7 @@ OpenGrammar upstream: https://github.com/swadhinbiswas/opengrammar (root reposit
 ## v1.5.8 — More readable agent notes
 
 Adds narrowly scoped sentence-boundary and comma improvements to long notes while keeping refunds, cancellations, approvals, and follow-up statuses unchanged. This is an optional draft only; agents must accept any replacement. Regression tests cover uncertainty preservation and the established writing workflow.
+
+## v1.5.9: Toolbar icon fixed in source and built ZIP
+
+All four PNG Chrome icons are committed at `icons/icon16.png`, `icons/icon32.png`, `icons/icon48.png`, and `icons/icon128.png`. The source and build manifests reference these PNGs, so the toolbar and chrome://extensions card use the branded blue document/checkmark icon whether the agent installs from the raw source folder or the GitHub Actions build. After updating files, reload the extension and refresh the HotelPlanner page. The toolbar icon should no longer show a gray D.
