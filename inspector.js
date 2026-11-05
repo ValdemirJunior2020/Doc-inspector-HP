@@ -190,9 +190,30 @@ function normalizeAllCaps(note) {
   masked=masked.toLowerCase().replace(/\b[a-z][a-z’']*\b/g,token=>approved.has(token.toUpperCase())?token.toUpperCase():token);
   return masked.replace(/\uE000(\d+)\uE001/g,(_,i)=>tokens[Number(i)]);
 }
+// Fast, deterministic typo fixes; independent of the optional Harper worker.
+const AGENT_TYPOS=Object.freeze({
+  upsett:"upset", becuz:"because", tryed:"tried", answerd:"answered",
+  minuts:"minutes", finaly:"finally", manger:"manager", sistem:"system",
+  refunnd:"refund", aproved:"approved", tommorow:"tomorrow",
+  fallow:"follow", superviser:"supervisor", bussy:"busy",
+  reservaton:"reservation", realy:"really", recieve:"receive",
+  dont:"don't", didnt:"didn't", havent:"haven't",
+  couldnt:"couldn't", wasnt:"wasn't", wont:"won't", cant:"can't"
+});
+function correctKnownTypos(note){
+  const approved=new Set(Object.keys(dictionary()).map(key=>key.toUpperCase()));
+  return note.replace(/\b[A-Za-z]+(?:['’][A-Za-z]+)?\b/g,word=>{
+    if(approved.has(word.toUpperCase()))return word;
+    const corrected=AGENT_TYPOS[word.toLowerCase()];
+    if(!corrected)return word;
+    if(word.toUpperCase()===word && word.length>1)return corrected.toUpperCase();
+    if(word[0]===word[0].toUpperCase())return corrected[0].toUpperCase()+corrected.slice(1);
+    return corrected;
+  });
+}
 function conservativeImprove(note) {
   if(settings.expand)note=expand(note);
-  note=normalizeAllCaps(note).trim().replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ").replace(/\s+([,;!?])/g,"$1");
+  note=correctKnownTypos(normalizeAllCaps(note)).trim().replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ").replace(/\s+([,;!?])/g,"$1");
   return note.split("\n").map(line=>{
     line=line.trim().replace(/\bi\b/g,"I");
     line=line.replace(/(^|[.!?]\s+)([a-z])/g,(_,p,ch)=>p+ch.toUpperCase());
