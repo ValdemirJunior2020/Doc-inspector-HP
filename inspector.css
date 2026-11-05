@@ -7,3 +7,16 @@
 #di-panel .di-line{display:flex;justify-content:space-between;align-items:center;gap:8px}#di-field-label{font:12px system-ui;color:#a7b7d0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#di-panel #di-results{margin:12px 0;padding:11px;border:1px solid #3c4c65;border-radius:10px;background:#162134;color:#a6b7cd;font:12px/1.5 system-ui}#di-panel .di-result{padding:7px 6px;border-left:3px solid #94a3b8;margin:4px 0;color:#dbeafe}#di-panel .di-result.good{border-color:#34d399}#di-panel .di-result.warn{border-color:#fbbf24}#di-panel .di-result.info{border-color:#a78bfa}#di-panel #di-checklist{margin:8px 0 12px;border:1px solid #34445d;padding:5px 10px;border-radius:9px}#di-panel #di-checklist label{display:flex;align-items:flex-start;gap:9px;margin:8px 0;font:12px/1.4 system-ui;color:#d1d5db}#di-panel #di-checklist input{accent-color:#8b5cf6;margin:2px 0 0}
 #di-panel footer{padding:11px 16px;border-top:1px solid #34445d;color:#b7c7db;background:#192438;min-height:43px;font:11px/1.4 system-ui}#di-panel #di-glossary p,#di-panel #di-guide p{color:#cbd5e1;font:13px/1.6 system-ui}#di-panel #di-entries{margin-top:12px}#di-panel #di-entries>div{display:grid;grid-template-columns:78px 1fr;gap:12px;padding:10px 7px;border-bottom:1px solid #334155;font:12px system-ui}#di-panel #di-entries b{color:#c4b5fd}#di-panel #di-entries span{color:#e2e8f0}@media(max-width:500px){#di-panel{right:8px;top:8px;width:calc(100vw - 16px);height:calc(100vh - 16px)}}
 #di-panel .di-history{font:12px/1.45 system-ui;color:#adbed3;margin:9px 0}#di-panel .di-history p{margin:6px 0}#di-panel .di-history .di-result{padding:5px 8px}#di-panel .di-actions[hidden]{display:none!important}
+
+/* v1.3.0: compact controls and smart guidance */
+#di-panel .di-header-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#di-panel header .di-header-controls button{min-width:26px;min-height:28px;border-radius:6px;padding:2px 7px;font:600 12px system-ui;color:#e5e7eb;background:#283951;border:1px solid #475569;cursor:pointer}
+#di-panel header .di-header-controls button:hover{background:#405373}
+#di-panel header #di-stop{color:#fcd34d}
+#di-panel.di-stopped header #di-stop{color:#86efac}
+#di-panel #di-smart{margin:10px 0;padding:10px;border:1px solid #42546d;border-radius:9px;background:#182438;font:12px/1.5 system-ui;color:#dbeafe}
+#di-panel #di-smart:empty{display:none}
+#di-panel #di-smart strong{display:block;margin-bottom:5px;font:600 12px system-ui}
+#di-launch{font-size:12px!important}
+#di-panel.di-minimized{display:none!important}
+@media(max-width:500px){#di-panel header .di-header-controls button{padding:3px 5px}}
