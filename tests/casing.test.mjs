@@ -25,3 +25,14 @@ for(const [given,expected] of [
   ["TOMMOROW I WILL FALLOW UP", "Tomorrow I will follow up."]
 ]) assert.equal(improve(given),expected,JSON.stringify(given));
 console.log("Casing and punctuation regression tests passed");
+
+// Regression: messy notes must be readable without changing stated outcomes.
+const messy = "GST CALLED YESTERDAY AND HE WAS VERY UPSETT BECUZ HIS RESERVATON WAS NOT SHOWING AT THE HTL,,, I TRYED TO CALL THE FD BUT NOBODY ANSWERD!!! AFTER 20 MINUTS I FINALY SW WITH THE MANGER WHO SAY THEY DONT HAVE THE RSV IN THERE SISTEM... GST WAS ASKING FOR A REFUNND BUT I DIDNT KNOW IF IT WAS APROVED OR NOT SO I TOLD HIM MAYBE WE CAN DO IT??? I ALSO SEND A EM TO RP AND THEY HAVENT REPLY YET!! GST SAID HE WANT TO CXL EVERYTHING BUT I CANNOT CONFIRM THE CXL WAS COMPLETED.. I TOLD HIM TO CALL BACK TOMMOROW BECAUSE I DONT KNOW WHAT ELSE TO DO,,,, THE GST WAS VERY ANGRY AND ASK FOR SUPERVISER BUT I DIDNT TRANSFER HIM BCZ THE SUPERVISER WAS BUSSY!!! I NEED SOMEONE TO FALLOW UP ASAP!!!! H20702662";
+const result=improve(messy);
+for(const phrase of ["upset because","reservation was not showing","nobody answered!","manager who said","their system.","refund but I didn't know if it was approved or not","I also sent an EM","they haven't replied yet","GST said he wanted to CXL","I cannot confirm the CXL was completed.","asked for a supervisor","supervisor was busy!","H20702662"]){
+ assert.ok(result.includes(phrase), `Expected phrase: ${phrase}; result: ${result}`);
+}
+for(const bad of ["upsett","becuz","refunnd","tommorow","bussy","!!!","???",",,,","..."]){
+ assert.ok(!result.toLowerCase().includes(bad), `Still contains: ${bad}`);
+}
+console.log("Messy note grammar and punctuation regression passed");
