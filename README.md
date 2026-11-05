@@ -4,7 +4,7 @@ Private, privacy-first Chrome extension for HotelPlanner documentation review.
 
 ## Current status
 
-Version 1.1.0 prototype. The supplied video attachment was not a valid playable MP4, so the exact site's notes editor has not been verified. This version includes manual field selection rather than pretending the integration is proven.
+Version 1.3.0 prototype. The supplied video attachment was not a valid playable MP4, so the exact site's notes editor has not been verified. This version includes manual field selection rather than pretending the integration is proven.
 
 ## Install
 
@@ -74,3 +74,13 @@ On ReservationXML.htm, clicking into the textarea beside the **Add Note** button
 ## Version 1.2.0 — Live Original Agent Notes
 
 When an agent types in the identified HotelPlanner Add Note editor, every keystroke is mirrored into **Original agent notes** in the inspector automatically. No need to retype, paste, inspect or click Select Field. The original HotelPlanner field remains the source of truth. If the agent edits the notes after a correction suggestion, the outdated suggestion is discarded. After typing pauses, a fresh correction can be offered. Acceptance is still mandatory before any field replacement. Historical/system activity is not rewritten.
+
+## Version 1.3.0 — Smart Inspector and Panel Controls
+
+- Smart documentation inspector adds advisory checks for reason for contact, actions performed, current outcome and responsibility for follow-up on pending issues. These are heuristic text checks, not verified evidence or Matrix compliance scores. Agents should confirm actual booking facts independently.
+- **Stop** freezes live monitoring and automatic corrections for the current tab until **Resume** is clicked. It does not disable Chrome's extension globally.
+- **Minimize** collapses the inspector into the floating DI button and stops automatic reopening until the user chooses to restore it. Monitoring continues in the current tab unless stopped.
+- **Hide** closes the panel and keeps a DI launcher for reopening. It also suppresses unwanted reopening during typing. Monitoring continues unless stopped.
+- The live source text and existing Accept/Reject functionality remain available.
+
+To update an unpacked extension: download latest ZIP, replace local files, reload on chrome://extensions and refresh the HotelPlanner tab.
