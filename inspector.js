@@ -244,11 +244,20 @@ function cleanPunctuation(note){
     .replace(/([,;])(?=[A-Za-z])/g,"$1 ")
     .replace(/[ \t]{2,}/g," ");
 }
+function improveReadability(note) {
+  // Split only recognized independent follow-up statements.
+  // Never infer completion of a refund, cancellation, or another booking action.
+  return note
+    .replace(/\b(After \d+ minutes?)\s+(?=I\b)/gi,"$1, ")
+    .replace(/([a-z0-9])\s+(?=(?:I also sent|GST said|I told him|GST was very angry|I need someone to follow up)\b)/g,"$1. ")
+    .replace(/\b(but)\s+(?=I didn't transfer him\b)/gi,", $1 ")
+    .replace(/\b(but)\s+(?=I cannot confirm\b)/gi,", $1 ");
+}
 function conservativeImprove(note) {
   if(settings.expand)note=expand(note);
   note=correctCommonGrammar(correctKnownTypos(normalizeAllCaps(note))).trim()
     .replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ");
-  note=cleanPunctuation(note);
+  note=cleanPunctuation(improveReadability(note));
   return note.split("\n").map(line=>{
     line=line.trim().replace(/\bi\b/g,"I");
     line=line.replace(/(^|[.!?]\s+)([a-z])/g,(_,p,ch)=>p+ch.toUpperCase());
