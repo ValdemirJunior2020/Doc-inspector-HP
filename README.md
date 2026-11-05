@@ -1,4 +1,4 @@
-# DO Inspector HP — v1.4.0
+# Doc-Inspector-HP — v1.4.0
 
 A lightweight writing assistant for HotelPlanner reservation agents. No QA evaluation, scoring, coaching checklist, or compliance dashboard is shown to agents.
 
@@ -42,7 +42,7 @@ On a computer with Node.js 22:
 3. `npm run build`
 4. Load the `dist` directory from `chrome://extensions`.
 
-Alternatively, use the GitHub Actions **Build Chrome extension ZIP** workflow and download its successful `DO-Inspector-HP-v1.5.0` artifact. Upload the **ZIP inside the artifact** to the Chrome Web Store, after testing and providing store icons/screenshots.
+Alternatively, use the GitHub Actions **Build Chrome extension ZIP** workflow and download its successful `Doc-Inspector-HP-v1.5.0` artifact. Upload the **ZIP inside the artifact** to the Chrome Web Store, after testing and providing store icons/screenshots.
 
 Harper is open source, Apache-2.0 licensed: https://github.com/Automattic/harper. The compiled Harper code runs locally in the extension. No remote runtime scripts or APIs are used.
 
@@ -60,4 +60,7 @@ Custom logo uses brand blue `#03549C`, a clean white document and a checkmark. T
 
 ## Version 1.5.3 — Fix missing icons on Load unpacked
 
-The raw GitHub source ZIP no longer refers to PNG icons which have not been generated yet, so Chrome can load it for development (using a generic Chrome icon). For the full branded icon and bundled Harper grammar engine, use the successfully built **DO-Inspector-HP-v1.5.3** ZIP artifact from GitHub Actions, extract the inner ZIP and select its folder in Chrome via Load unpacked. The build now injects the PNG icons into the distribution manifest after generating them from assets/icon.svg.
+The raw GitHub source ZIP no longer refers to PNG icons which have not been generated yet, so Chrome can load it for development (using a generic Chrome icon). For the full branded icon and bundled Harper grammar engine, use the successfully built **Doc-Inspector-HP-v1.5.3** ZIP artifact from GitHub Actions, extract the inner ZIP and select its folder in Chrome via Load unpacked. The build now injects the PNG icons into the distribution manifest after generating them from assets/icon.svg.
+
+## Version 1.5.4 — Consistent product name
+The extension, popup, panel, settings and packaged artifact use the official display name **Doc-Inspector-HP**.
