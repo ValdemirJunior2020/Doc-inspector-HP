@@ -8,6 +8,7 @@ let onmessage,posted;
 const context={
   LocalLinter:class{async lint(){return [];}},
   binaryInlined:{},
+  basicGrammarRules:[],
   self:{set onmessage(fn){onmessage=fn;},
     postMessage:(result)=>{posted=result;}}
 };
