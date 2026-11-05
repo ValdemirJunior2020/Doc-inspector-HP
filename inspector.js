@@ -96,7 +96,8 @@ function autoReview(event){
   if(!settings.autoReview||!event.isTrusted)return;
   const t=event.target;
   if(!editable(t)||panel.contains(t)||t.type==="password")return;
-  if(t instanceof HTMLInputElement && !/(note|comment|documentation|remark|description|message)/i.test([t.name,t.id,t.placeholder,t.getAttribute("aria-label")].join(" ")))return;
+  const descriptor=[t.getAttribute("name"),t.id,t.getAttribute("placeholder"),t.getAttribute("aria-label"),t.closest("[class],[id]")?.getAttribute("class"),t.closest("[class],[id]")?.id].filter(Boolean).join(" ");
+  if(!/(note|comment|documentation|remark|description|message)/i.test(descriptor))return;
   dirtyField=t;
   clearTimeout(noteTimer);
   noteTimer=setTimeout(()=>{if(dirtyField===t)suggestForField(t);},700);
