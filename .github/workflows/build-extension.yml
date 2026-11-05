@@ -17,8 +17,8 @@ jobs:
       - name: Zip Chrome extension contents
         run: |
           cd dist
-          zip -r ../DO-Inspector-HP-v1.5.2.zip .
+          zip -r ../DO-Inspector-HP-v1.5.3.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: DO-Inspector-HP-v1.5.2
-          path: DO-Inspector-HP-v1.5.2.zip
+          name: DO-Inspector-HP-v1.5.3
+          path: DO-Inspector-HP-v1.5.3.zip
