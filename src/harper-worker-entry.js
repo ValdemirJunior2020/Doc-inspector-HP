@@ -23,7 +23,7 @@ function matchedCase(previous,next) {
 }
 function protectedWord(word,approved) {
   return approved.has(word.toUpperCase()) || /^H\d{8}$/i.test(word) ||
-    /\d/.test(word) || /^[A-Z]{2,}$/.test(word) || word.includes("@");
+    /\d/.test(word) || /^[A-Z]{2,4}$/.test(word) || word.includes("@");
 }
 function replaceWordTypos(text,approved) {
   return text.replace(/\b[A-Za-z]+(?:['’][A-Za-z]+)?\b/g,word=>{
