@@ -5,6 +5,18 @@ const terms={"REQ":"REQUEST","SW":"SPOKE WITH","OTP":"ON THE PHONE","GST":"GUEST
 const defaults={auto:false,expand:false,privacy:true,checks:["Reason for contact","Who was contacted (if applicable)","Actions actually taken","Outcome / current status","Next step and responsible party (if unresolved)"],custom:""};
 let settings=defaults, field=null, original="", picking=false;
 let noteTimer=null, dirtyField=null, lastSuggestionKey="";
+function isCommentsPage(){
+  return location.hostname.toLowerCase().replace(/^www\./,"")==="hotelplanner.com" &&
+    /\/Common\/Popups\/ReservationXML\.htm$/i.test(location.pathname) &&
+    location.hash.toLowerCase()==="#comments";
+}
+function commentsContext(){
+  if(!isCommentsPage())return;
+  launch.title="Documentation Inspector — Notes section detected";
+  el("di-status").textContent="Notes section detected. Type your new note to receive a review suggestion.";
+}
+window.addEventListener("hashchange",commentsContext);
+
 function noteClass(author,body) {
   const a=author.toLowerCase(), t=body.toLowerCase();
   if (/system generated/.test(a)) return "system";
@@ -92,20 +104,29 @@ function conservativeImprove(note){
   return note.trim().replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ").replace(/\s+([,.;!?])/g,"$1").split("\n")
     .map(line=>{line=line.trim().replace(/\bi\b/g,"I").replace(/(^|[.!?]\s+)([a-z])/g,(_,p,ch)=>p+ch.toUpperCase());if(/[A-Za-z0-9)]$/.test(line))line+=".";return line}).join("\n");
 }
+function isLikelyNoteEditor(t){
+  if(!editable(t)||panel.contains(t)||t instanceof HTMLInputElement&&t.type==="password")return false;
+  const descriptor=[t.getAttribute("name"),t.id,t.getAttribute("placeholder"),t.getAttribute("aria-label"),
+    t.closest("[class],[id]")?.getAttribute("class"),t.closest("[class],[id]")?.id].filter(Boolean).join(" ");
+  if(isCommentsPage() && t instanceof HTMLTextAreaElement) return true;
+  return /(note|comment|documentation|remark|description|message)/i.test(descriptor);
+}
 function autoReview(event){
   if(!settings.autoReview||!event.isTrusted)return;
   const t=event.target;
-  if(!editable(t)||panel.contains(t)||t.type==="password")return;
-  const descriptor=[t.getAttribute("name"),t.id,t.getAttribute("placeholder"),t.getAttribute("aria-label"),t.closest("[class],[id]")?.getAttribute("class"),t.closest("[class],[id]")?.id].filter(Boolean).join(" ");
-  if(!/(note|comment|documentation|remark|description|message)/i.test(descriptor))return;
+  if(!isLikelyNoteEditor(t))return;
   dirtyField=t;
   clearTimeout(noteTimer);
-  noteTimer=setTimeout(()=>{if(dirtyField===t)suggestForField(t);},700);
+  // Avoid interruptions while composing a note; suggest after a substantial pause.
+  noteTimer=setTimeout(()=>{if(dirtyField===t)suggestForField(t);},1800);
 }
 document.addEventListener("input",autoReview,true);
 document.addEventListener("focusout",event=>{
   const t=event.target;
-  if(settings.autoReview&&dirtyField===t&&editable(t)&&!panel.contains(t)){clearTimeout(noteTimer);noteTimer=setTimeout(()=>suggestForField(t),250);}
+  if(settings.autoReview&&dirtyField===t&&isLikelyNoteEditor(t)){
+    clearTimeout(noteTimer);
+    noteTimer=setTimeout(()=>suggestForField(t),300);
+  }
 },true);
 el("di-analyze").onclick=inspect;
 el("di-rewrite").onclick=()=>{const note=el("di-source").value.trim();if(!note){el("di-status").textContent="Enter notes first.";return;}if(parseHistory(note).length){el("di-status").textContent="Historical activity is read-only. Select a new agent note instead.";return;}el("di-draft").value=conservativeImprove(note);inspect();el("di-status").textContent="Draft ready: accept or reject; verify all facts.";el("di-suggestion-actions").hidden=false;};
@@ -115,5 +136,5 @@ el("di-apply").onclick=()=>{const draft=el("di-draft").value;if(!draft.trim()){e
 function glossary(){const q=el("di-filter").value.trim().toLowerCase();el("di-entries").innerHTML=Object.entries(dictionary()).filter(([k,v])=>(k+" "+v).toLowerCase().includes(q)).map(([k,v])=>'<div><b>'+encode(k)+'</b><span>'+encode(v)+'</span></div>').join("")||"No matches";}
 el("di-filter").oninput=glossary;
 el("di-settings").onclick=()=>chrome.runtime.openOptionsPage();
-chrome.storage.sync.get({...defaults,autoReview:true},v=>{settings=v;for(const item of v.checks){const label=document.createElement("label");const box=document.createElement("input");box.type="checkbox";label.append(box,document.createTextNode(item));el("di-checklist").append(label);}glossary();if(v.auto)visible();});
+chrome.storage.sync.get({...defaults,autoReview:true},v=>{settings=v;for(const item of v.checks){const label=document.createElement("label");const box=document.createElement("input");box.type="checkbox";label.append(box,document.createTextNode(item));el("di-checklist").append(label);}glossary();if(v.auto)visible();commentsContext();});
 })();
