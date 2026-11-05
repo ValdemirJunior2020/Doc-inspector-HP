@@ -143,15 +143,15 @@ function inspect(){
 function suggestForField(t) {
   if(stopped||!t||!t.isConnected||!editable(t)||panel.contains(t))return;
   const text=value(t).trim();
-  if(text.length<8||parseHistory(text).length>0)return;
+  if(text.length<2||parseHistory(text).length>0)return;
   const key=text+"|"+(t.getAttribute("name")||t.id||"");
   if(key===lastSuggestionKey)return;
-  lastSuggestionKey=key;
   if(field!==t)selectField(t);
   else syncOriginalField(t);
+  lastSuggestionKey=key;
   const improved=conservativeImprove(text);
   checkHarper(improved);
-  if(improved===text)return;
+  if(improved===text){el("di-draft").value="";el("di-suggestion-actions").hidden=true;return;}
   el("di-draft").value=improved;
   inspect();
   if(!dismissed&&!minimized)visible();
@@ -159,17 +159,19 @@ function suggestForField(t) {
   el("di-suggestion-actions").hidden=false;
 }
 function normalizeAllCaps(note) {
-  const letters=(note.match(/[A-Za-z]/g)||[]);
-  if(letters.length<9)return note;
+  const approved=new Set(Object.keys(dictionary()).map(x=>x.toUpperCase()));
+  const words=note.match(/\b[A-Za-z][A-Za-z’']*\b/g)||[];
+  // Ignore company shorthand and identifiers when deciding whether ordinary words are ALL CAPS.
+  const ordinary=words.filter(w=>w.toUpperCase()!=="I"&&!approved.has(w.toUpperCase()));
+  const letters=ordinary.join("").match(/[A-Za-z]/g)||[];
+  if(letters.length<2)return note;
   const upper=letters.filter(ch=>ch===ch.toUpperCase()).length;
   if(upper/letters.length<0.8)return note;
-  const approved=new Set(Object.keys(dictionary()).map(x=>x.toUpperCase()));
   const protectedTokens=/\bH\d{8}\b|\b[A-Z]{1,5}\d[A-Z0-9]*\b|\b(?:IP|SMS|FOC|URL|USD|HTML|API)\b/gi;
   const tokens=[];
   let masked=note.replace(protectedTokens,match=>{tokens.push(match);return "\uE000"+(tokens.length-1)+"\uE001";});
   masked=masked.toLowerCase().replace(/\b[a-z][a-z’']*\b/g,token=>approved.has(token.toUpperCase())?token.toUpperCase():token);
-  masked=masked.replace(/\uE000(\d+)\uE001/g,(_,i)=>tokens[Number(i)]);
-  return masked;
+  return masked.replace(/\uE000(\d+)\uE001/g,(_,i)=>tokens[Number(i)]);
 }
 function conservativeImprove(note) {
   if(settings.expand)note=expand(note);
