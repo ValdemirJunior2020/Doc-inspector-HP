@@ -211,9 +211,44 @@ function correctKnownTypos(note){
     return corrected;
   });
 }
+// Conservative contextual corrections for common spoken call notes.
+// Do not infer refunds, approvals, cancellations, or other outcomes.
+function correctCommonGrammar(note){
+  const rules=[
+    [/\bbcz\b/gi,"because"],
+    [/\bthere (system|records|reservation|booking|notes)\b/gi,"their $1"],
+    [/\bwho say\b/gi,"who said"],
+    [/\bhe want to\b/gi,"he wanted to"],
+    [/\bshe want to\b/gi,"she wanted to"],
+    [/\bthey haven't reply\b/gi,"they haven't replied"],
+    [/\bthey havent reply\b/gi,"they haven't replied"],
+    [/\bI also send a EM\b/gi,"I also sent an EM"],
+    [/\bI also send an EM\b/gi,"I also sent an EM"],
+    [/\band ask for supervisor\b/gi,"and asked for a supervisor"],
+    [/\band ask for a supervisor\b/gi,"and asked for a supervisor"],
+    [/\bdon't have the RSV in their system\b/gi,"don't have the RSV in their system"],
+    [/\bASAP\b/gi,"ASAP"]
+  ];
+  return rules.reduce((text,[pattern,replacement])=>text.replace(pattern,replacement),note);
+}
+function cleanPunctuation(note){
+  // Only normalize excessive punctuation. Keep an existing question mark
+  // and don't turn uncertain refund/cancellation statements into assertions.
+  return note
+    .replace(/\.{2,}/g,". ")
+    .replace(/!{2,}/g,"! ")
+    .replace(/\?{2,}/g,"? ")
+    .replace(/,{2,}/g,", ")
+    .replace(/\s+([,.;!?])/g,"$1")
+    .replace(/([.!?])(?=[A-Za-z])/g,"$1 ")
+    .replace(/([,;])(?=[A-Za-z])/g,"$1 ")
+    .replace(/[ \t]{2,}/g," ");
+}
 function conservativeImprove(note) {
   if(settings.expand)note=expand(note);
-  note=correctKnownTypos(normalizeAllCaps(note)).trim().replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ").replace(/\s+([,;!?])/g,"$1");
+  note=correctCommonGrammar(correctKnownTypos(normalizeAllCaps(note))).trim()
+    .replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ");
+  note=cleanPunctuation(note);
   return note.split("\n").map(line=>{
     line=line.trim().replace(/\bi\b/g,"I");
     line=line.replace(/(^|[.!?]\s+)([a-z])/g,(_,p,ch)=>p+ch.toUpperCase());
