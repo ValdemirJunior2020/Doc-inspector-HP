@@ -20,3 +20,9 @@
 #di-launch{font-size:12px!important}
 #di-panel.di-minimized{display:none!important}
 @media(max-width:500px){#di-panel header .di-header-controls button{padding:3px 5px}}
+
+/* v1.5.0 offline grammar suggestions */
+#di-panel #di-harper{font:12px/1.45 system-ui;color:#dbeafe;margin:10px 0}
+#di-panel #di-harper:empty{display:none}
+#di-panel #di-harper strong{display:block;margin-bottom:6px}
+#di-panel #di-harper .di-result{padding:5px 8px}
