@@ -2,7 +2,7 @@
 if (window.__DO_INSPECTOR_HP__) { window.dispatchEvent(new Event("di-toggle")); return; }
 window.__DO_INSPECTOR_HP__=true;
 const terms={"REQ":"REQUEST","SW":"SPOKE WITH","OTP":"ON THE PHONE","GST":"GUEST","RES SP":"RESERVATION SPECIALIST","MNGT":"MANAGEMENT","VC":"VIRTUAL CARD","CC":"CREDIT CARD","ZD":"ZENDESK","MOD":"MANAGER ON DUTY","LVM":"LEFT VOICE MAIL","HTL":"HOTEL / MOTEL","CLD":"CALLED","RFD":"REFUND","VM":"VOICE MAIL","RP":"RATE PROVIDER","FD":"FRONT DESK","EM":"E-MAIL","EM’D":"E-MAILED","NR":"NEW REFUND","CXL":"CANCEL","CXL@":"CANCELATION NUMBER","FOC":"FREE OF CHARGES","GM":"GENERAL MANAGER","RSV":"RESERVATION","IT#":"ITINERARY NUMBER","CX":"CUSTOMER"};
-const defaults={auto:false,expand:false,privacy:true,checks:["Reason for contact","Who was contacted (if applicable)","Actions actually taken","Outcome / current status","Next step and responsible party (if unresolved)"],custom:""};
+const defaults={auto:false,expand:false,privacy:true,custom:""};
 let settings=defaults, field=null, original="", picking=false;
 let noteTimer=null, dirtyField=null, lastSuggestionKey="";
 let stopped=false, dismissed=false, minimized=false;
@@ -34,22 +34,12 @@ function parseHistory(text) {
     return {type:noteClass(match[2],match[4]),author:match[2],body:match[4]};
   });
 }
-function renderHistory(text) {
-  const records=parseHistory(text);
-  let target=el("di-history");
-  if(!target)return;
-  if(!records.length){target.textContent="No timestamped activity log detected. This is treated as an editable draft, not a historical record.";return;}
-  const counts={};records.forEach(x=>counts[x.type]=(counts[x.type]||0)+1);
-  target.innerHTML='<b>Activity history: '+records.length+' entries</b><p>'+Object.entries(counts).map(([type,n])=>encode(type)+': '+n).join(' · ')+'</p>'+
-    records.map(x=>'<div class="di-result info"><b>'+encode(x.type)+'</b> — '+encode(x.author)+'</div>').join("");
-}
-
 const panel=document.createElement("aside");panel.id="di-panel";panel.innerHTML=[
-'<header><div><b>DO Inspector HP</b><small>Documentation quality · agent review</small></div><div class="di-header-controls"><button id="di-stop" title="Stop monitoring" aria-label="Stop monitoring">Stop</button><button id="di-minimize" title="Minimize inspector" aria-label="Minimize inspector">−</button><button id="di-hide" title="Hide inspector" aria-label="Hide inspector">×</button></div></header>',
-'<nav><button data-page="review" class="active">Inspector</button><button data-page="glossary">Abbreviations</button><button data-page="guide">Guide</button></nav>',
-'<section id="di-review"><div class="di-line"><span id="di-field-label">No note field selected</span><button id="di-pick">Select field</button></div><label for="di-source">Original agent notes</label><textarea id="di-source" placeholder="Select a field or paste notes here"></textarea><div class="di-actions"><button id="di-analyze" class="primary">Inspect</button><button id="di-rewrite">Improve writing</button></div><div id="di-results" aria-live="polite">Findings will appear here. No QA score is assigned.</div><div id="di-smart" aria-live="polite"></div><div id="di-history" class="di-history" aria-live="polite"></div><div class="di-line"><b>Documentation checklist</b><small>Manual verification</small></div><div id="di-checklist"></div><label for="di-draft">Improved draft (editable)</label><textarea id="di-draft" placeholder="Click Improve writing, then review all facts"></textarea><div class="di-actions"><button id="di-copy">Copy draft</button><button id="di-apply" class="primary">Accept and apply</button></div><div class="di-actions" id="di-suggestion-actions" hidden><button id="di-reject">Reject suggestion</button></div></section>',
+'<header><div><b>DO Inspector HP</b><small>Writing assistance · live notes</small></div><div class="di-header-controls"><button id="di-stop" title="Stop monitoring" aria-label="Stop monitoring">Stop</button><button id="di-minimize" title="Minimize inspector" aria-label="Minimize inspector">−</button><button id="di-hide" title="Hide inspector" aria-label="Hide inspector">×</button></div></header>',
+'<nav><button data-page="review" class="active">Writing</button><button data-page="glossary">Abbreviations</button><button data-page="guide">Help</button></nav>',
+'<section id="di-review"><div class="di-line"><span id="di-field-label">No note field selected</span><button id="di-pick">Select field</button></div><label for="di-source">Original agent notes</label><textarea id="di-source" placeholder="Select a field or paste notes here"></textarea><div class="di-actions"><button id="di-analyze" class="primary">Check writing</button><button id="di-rewrite">Improve writing</button></div><div id="di-results" aria-live="polite">Writing suggestions will appear here.</div><label for="di-draft">Improved draft (editable)</label><textarea id="di-draft" placeholder="Click Improve writing, then review all facts"></textarea><div class="di-actions"><button id="di-copy">Copy draft</button><button id="di-apply" class="primary">Accept and apply</button></div><div class="di-actions" id="di-suggestion-actions" hidden><button id="di-reject">Reject suggestion</button></div></section>',
 '<section id="di-glossary" hidden><p>Approved terminology from your chart; team additions are optional.</p><input id="di-filter" placeholder="Search abbreviations"><div id="di-entries"></div></section>',
-'<section id="di-guide" hidden><p><b>1.</b> Select the actual notes field on the page.</p><p><b>2.</b> Inspect the text for wording and completeness prompts.</p><p><b>3.</b> Generate and review an optional improved draft.</p><p><b>4.</b> Apply it only after confirmation, then use the website’s own save button.</p><p>Never claim a refund, cancellation, call, approval, or guest promise occurred unless documented and verified. This extension does not read booking APIs or submit any data.</p><button id="di-settings">Settings</button></section>',
+'<section id="di-guide" hidden><p><b>1.</b> Select the actual notes field on the page.</p><p><b>2.</b> Continue typing. Optional writing improvements appear after you pause.</p><p><b>3.</b> Generate and review an optional improved draft.</p><p><b>4.</b> Apply it only after confirmation, then use the website’s own save button.</p><p>Never claim a refund, cancellation, call, approval, or guest promise occurred unless documented and verified. This extension does not read booking APIs or submit any data.</p><button id="di-settings">Settings</button></section>',
 '<footer id="di-status" role="status">No notes are uploaded or logged.</footer>'
 ].join("");
 const launch=document.createElement("button");launch.id="di-launch";launch.textContent="DI";launch.title="Open Documentation Inspector";
@@ -94,7 +84,7 @@ function syncOriginalField(t) {
   el("di-draft").value="";
   el("di-suggestion-actions").hidden=true;
   lastSuggestionKey="";
-  el("di-results").textContent="Agent notes updated. The suggestion will refresh when typing pauses.";
+  el("di-results").textContent="Notes synced. An optional correction will appear after you pause.";
 }
 
 function pickClick(event){const t=event.target.closest?.("textarea,input,[contenteditable]")||event.target;if(!editable(t)||panel.contains(t))return;event.preventDefault();event.stopPropagation();document.removeEventListener("click",pickClick,true);picking=false;el("di-pick").textContent="Select field";selectField(t);visible();}
@@ -104,38 +94,20 @@ function dictionary(){const extra={};for(const line of (settings.custom||"").spl
 const escapedRegex=s=>s.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&");
 function hasCode(note,code){return new RegExp("(^|[^A-Za-z0-9])"+escapedRegex(code)+"(?=$|[^A-Za-z0-9])","i").test(note)}
 function expand(note){for(const [code,meaning] of Object.entries(dictionary()).sort((a,b)=>b[0].length-a[0].length)){note=note.replace(new RegExp("(^|[^A-Za-z0-9])"+escapedRegex(code)+"(?=$|[^A-Za-z0-9])","gi"),(_,prefix)=>prefix+meaning.toLowerCase())}return note;}
-function smartChecks(note){
-  const checks=[];
-  if(!note){el("di-smart").replaceChildren();return;}
-  const categories=[
-    ["Reason for contact", /\b(?:guest|gst|customer|cx|called|request(?:ed)?|req|issue|problem|cancel|cxl|refund|rfd|room|price match|reservation|rsv)\b/i, "Explain what the guest needed."],
-    ["Actions taken", /\b(?:called|cld|spoke|sw|contacted|emailed|em’d|sent|offered|submitted|created|checked|verified|explained|advised|requested|processed|escalated)\b/i, "State what you actually did (if applicable)."],
-    ["Current outcome", /\b(?:approved|declined|denied|completed|issued|processed|pending|cancelled|canceled|resolved|unresolved|accepted|rejected|refused|no refund|waiting|awaiting|confirmed)\b/i, "Clarify the current result, if known."],
-    ["Next step when pending", /\b(?:follow.?up|callback|call back|will contact|need(?:s)? to|awaiting|waiting|pending|escalat|ticket|responsib|by tomorrow|within \d+|business days)\b/i, "Document the responsible person and follow-up when unresolved."]
-  ];
-  const pending=/\b(?:pending|awaiting|waiting|unresolved|follow.?up|escalat)\b/i.test(note);
-  categories.forEach(([name,pattern,advice],index)=>{if(index===3&&!pending)return;if(!pattern.test(note))checks.push(name+": "+advice);});
-  if(pending&&!/\b(?:agent|supervisor|manager|hotel|htl|supplier|provider|rp|guest|gst|customer|cx|team|department|i will|we will)\b/i.test(note))
-    checks.push("Pending follow-up: verify who is responsible.");
-  const box=el("di-smart");
-  box.replaceChildren();
-  const title=document.createElement("strong");title.textContent="Smart documentation checks · review prompts";box.append(title);
-  for(const issue of checks){
-    const row=document.createElement("div");row.className="di-result warn";row.textContent=issue;box.append(row);
+function inspect(){
+  if(stopped){el("di-status").textContent="Writing assistant paused. Click Resume.";return;}
+  const note=el("di-source").value.trim(), found=[];
+  if(!note)found.push(["info","Start typing in the HotelPlanner Notes box."]);
+  else {
+    const matched=Object.keys(dictionary()).filter(x=>hasCode(note,x));
+    if(matched.length)found.push(["good","Approved abbreviations: "+matched.join(", ")]);
+    if(settings.privacy&&/(?:\d[ -]?){13,19}/.test(note))found.push(["warn","Possible payment-card number. Avoid including full card details."]);
+    if(!/[.!?]\s|[.!?]$/.test(note))found.push(["info","Optional: add sentence punctuation for easier reading."]);
+    if(!found.length)found.push(["good","Your note is ready for your review."]);
   }
-  if(!checks.length){const row=document.createElement("div");row.className="di-result good";row.textContent="No obvious gaps detected. Verify against the booking and approved Matrix.";box.append(row);}
+  el("di-results").innerHTML=found.map(([type,msg])=>'<div class="di-result '+type+'">'+encode(msg)+'</div>').join("");
+  el("di-status").textContent="Suggestions are optional. You control what gets saved.";
 }
-function inspect(){if(stopped){el("di-status").textContent="Inspector is stopped. Click Resume.";return;}const note=el("di-source").value.trim();renderHistory(note);smartChecks(note);const found=[];if(!note)found.push(["warn","No notes entered."]);else{
-const matched=Object.keys(dictionary()).filter(x=>hasCode(note,x));if(matched.length)found.push(["good","Recognized abbreviations: "+matched.join(", ")]);
-if(note.length<35)found.push(["warn","Very short note. Verify it explains the reason, action and outcome."]);
-if(/\b(pending|awaiting|waiting|follow.up|callback|unresolved)\b/i.test(note))found.push(["warn","Pending action detected. Verify next step, owner and current status."]);
-if(/\b(cxl|cancel|cancellation|refund|rfd|foc)\b/i.test(note))found.push(["info","Refund/cancellation reference detected. Confirm the actual status; do not confuse requested with completed."]);
-if(settings.privacy&&/(?:\d[ -]?){13,19}/.test(note))found.push(["warn","Possible payment-card number: remove sensitive details."]);
-if(!/[.!?]\s|[.!?]$/.test(note))found.push(["info","Consider writing clear sentences rather than one continuous line."]);
-if(!found.length)found.push(["good","No obvious wording problems. Accuracy and Matrix compliance still require independent verification."]);
-}
-el("di-results").innerHTML=found.map(([type,msg])=>'<div class="di-result '+type+'">'+encode(msg)+'</div>').join("");
-el("di-status").textContent="Inspection complete — suggestions only, never an automatic QA penalty.";}
 function suggestForField(t) {
   if(stopped||!t||!t.isConnected||!editable(t)||panel.contains(t))return;
   const text=value(t).trim();
@@ -217,5 +189,5 @@ el("di-apply").onclick=()=>{if(stopped){el("di-status").textContent="Inspector s
 function glossary(){const q=el("di-filter").value.trim().toLowerCase();el("di-entries").innerHTML=Object.entries(dictionary()).filter(([k,v])=>(k+" "+v).toLowerCase().includes(q)).map(([k,v])=>'<div><b>'+encode(k)+'</b><span>'+encode(v)+'</span></div>').join("")||"No matches";}
 el("di-filter").oninput=glossary;
 el("di-settings").onclick=()=>chrome.runtime.openOptionsPage();
-chrome.storage.sync.get({...defaults,autoReview:true},v=>{settings=v;for(const item of v.checks){const label=document.createElement("label");const box=document.createElement("input");box.type="checkbox";label.append(box,document.createTextNode(item));el("di-checklist").append(label);}glossary();if(v.auto && isReservationPage()&&!stopped)visible();commentsContext();});
+chrome.storage.sync.get({...defaults,autoReview:true},v=>{settings=v;glossary();if(v.auto && isReservationPage()&&!stopped)visible();commentsContext();});
 })();
