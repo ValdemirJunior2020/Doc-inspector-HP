@@ -2,14 +2,10 @@
   "manifest_version": 3,
   "name": "DO Inspector HP",
   "description": "Offline agent writing assistant for HotelPlanner with optional grammar suggestions and approved abbreviations.",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "DO Inspector HP",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "32": "icons/icon32.png"
-    }
+    "default_title": "DO Inspector HP"
   },
   "permissions": [
     "activeTab",
@@ -33,12 +29,6 @@
       "all_frames": false
     }
   ],
-  "icons": {
-    "16": "icons/icon16.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "web_accessible_resources": [
     {
       "resources": [
