@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DO Inspector HP",
   "description": "Privacy-first documentation inspector for HotelPlanner notes. Review, improve and apply notes only with agent confirmation.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "action": {
     "default_popup": "popup.html",
     "default_title": "DO Inspector HP"
