@@ -5,6 +5,6 @@ const out=path.resolve("dist");
 await mkdir(out,{recursive:true});
 const manifest=JSON.parse(await readFile("manifest.json","utf8"));
 for(const file of ["manifest.json","inspector.js","inspector.css","popup.html","popup.js","options.html","options.js"])await copyFile(file,path.join(out,file));
-await build({entryPoints:["src/harper-worker-entry.js"],outfile:path.join(out,"harper-worker.js"),bundle:true,format:"iife",platform:"browser",target:["chrome120"],minify:true,logLevel:"warning",legalComments:"none"});
+await build({entryPoints:["src/harper-worker-entry.js"],outfile:path.join(out,"harper-worker.js"),bundle:true,format:"iife",platform:"browser",target:["chrome120"],minify:true,logLevel:"warning",legalComments:"none",external:["fs"]});
 await writeFile(path.join(out,"THIRD-PARTY-NOTICES.txt"),"Harper, Copyright Automattic and contributors. Licensed under Apache License 2.0. https://github.com/Automattic/harper\n");
 console.log("Chrome Web Store package files built in dist/ (version "+manifest.version+").");
