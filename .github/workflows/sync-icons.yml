@@ -1,0 +1,41 @@
+name: Commit Chrome icon files
+on:
+  push:
+    branches: [main]
+    paths:
+      - assets/icon.svg
+      - .github/workflows/sync-icons.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Generate committed PNG icons
+        run: |
+          mkdir -p icons
+          node --input-type=module <<'NODE'
+          import sharp from 'sharp';
+          import { readFile } from 'node:fs/promises';
+          const source = await readFile('assets/icon.svg');
+          for (const size of [16, 32, 48, 128]) {
+            await sharp(source).resize(size, size).png().toFile(`icons/icon${size}.png`);
+          }
+          NODE
+      - name: Commit icons back to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add icons/
+          if ! git diff --cached --quiet; then
+            git commit -m "Include real PNG icons for Load unpacked installation"
+            git push origin HEAD:main
+          fi
