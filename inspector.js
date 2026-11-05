@@ -104,11 +104,26 @@ function conservativeImprove(note){
   return note.trim().replace(/\r\n?/g,"\n").replace(/[ \t]{2,}/g," ").replace(/\s+([,.;!?])/g,"$1").split("\n")
     .map(line=>{line=line.trim().replace(/\bi\b/g,"I").replace(/(^|[.!?]\s+)([a-z])/g,(_,p,ch)=>p+ch.toUpperCase());if(/[A-Za-z0-9)]$/.test(line))line+=".";return line}).join("\n");
 }
+function isReservationPage(){
+  return location.hostname.toLowerCase().replace(/^www\./,"")==="hotelplanner.com" &&
+    /\/Common\/Popups\/ReservationXML\.htm$/i.test(location.pathname);
+}
 function isLikelyNoteEditor(t){
   if(!editable(t)||panel.contains(t)||t instanceof HTMLInputElement&&t.type==="password")return false;
+  if(isReservationPage() && t instanceof HTMLTextAreaElement){
+    // ReservationXML note editor is a textarea immediately above the orange Add Note button.
+    // Do not treat unrelated reservation textareas as notes.
+    const parent=t.closest("form")||t.parentElement?.parentElement||t.parentElement;
+    const buttons=Array.from(parent?.querySelectorAll("button,input[type=submit],input[type=button]")||[]);
+    if(buttons.some(b=>/add\s*note/i.test([b.textContent,b.value,b.getAttribute("title")].join(" "))))return true;
+    const rect=t.getBoundingClientRect();
+    const all=Array.from(document.querySelectorAll("button,input[type=submit],input[type=button]"));
+    if(all.some(b=>{const brect=b.getBoundingClientRect();return /add\s*note/i.test([b.textContent,b.value].join(" ")) &&
+      Math.abs(brect.top-rect.bottom)<180 && Math.abs(brect.left-rect.left)<220;}))return true;
+    if(isCommentsPage() && document.querySelectorAll("textarea:not(#di-source):not(#di-draft)").length===1)return true;
+  }
   const descriptor=[t.getAttribute("name"),t.id,t.getAttribute("placeholder"),t.getAttribute("aria-label"),
     t.closest("[class],[id]")?.getAttribute("class"),t.closest("[class],[id]")?.id].filter(Boolean).join(" ");
-  if(isCommentsPage() && t instanceof HTMLTextAreaElement) return true;
   return /(note|comment|documentation|remark|description|message)/i.test(descriptor);
 }
 function autoReview(event){
@@ -116,10 +131,20 @@ function autoReview(event){
   const t=event.target;
   if(!isLikelyNoteEditor(t))return;
   dirtyField=t;
+  if(field!==t)selectField(t);
+  if(!panel.classList.contains("di-visible"))visible();
   clearTimeout(noteTimer);
   // Avoid interruptions while composing a note; suggest after a substantial pause.
   noteTimer=setTimeout(()=>{if(dirtyField===t)suggestForField(t);},1800);
 }
+document.addEventListener("focusin",event=>{
+  if(!settings.autoReview||!event.isTrusted||!isLikelyNoteEditor(event.target))return;
+  // The browser toolbar popup cannot be programmatically opened; open our in-page inspector instead.
+  dirtyField=event.target;
+  if(field!==dirtyField)selectField(dirtyField);
+  visible();
+  el("di-status").textContent="Notes editor detected. Keep typing; correction is suggested after you pause.";
+},true);
 document.addEventListener("input",autoReview,true);
 document.addEventListener("focusout",event=>{
   const t=event.target;
@@ -136,5 +161,5 @@ el("di-apply").onclick=()=>{const draft=el("di-draft").value;if(!draft.trim()){e
 function glossary(){const q=el("di-filter").value.trim().toLowerCase();el("di-entries").innerHTML=Object.entries(dictionary()).filter(([k,v])=>(k+" "+v).toLowerCase().includes(q)).map(([k,v])=>'<div><b>'+encode(k)+'</b><span>'+encode(v)+'</span></div>').join("")||"No matches";}
 el("di-filter").oninput=glossary;
 el("di-settings").onclick=()=>chrome.runtime.openOptionsPage();
-chrome.storage.sync.get({...defaults,autoReview:true},v=>{settings=v;for(const item of v.checks){const label=document.createElement("label");const box=document.createElement("input");box.type="checkbox";label.append(box,document.createTextNode(item));el("di-checklist").append(label);}glossary();if(v.auto)visible();commentsContext();});
+chrome.storage.sync.get({...defaults,autoReview:true},v=>{settings=v;for(const item of v.checks){const label=document.createElement("label");const box=document.createElement("input");box.type="checkbox";label.append(box,document.createTextNode(item));el("di-checklist").append(label);}glossary();if(v.auto && isReservationPage())visible();commentsContext();});
 })();
