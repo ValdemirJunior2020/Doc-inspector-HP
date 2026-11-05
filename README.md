@@ -57,3 +57,7 @@ Short notes are now corrected, including `I CANNOT` to `I cannot.` and `NO REFUN
 ## Version 1.5.2 — Chrome icon
 
 Custom logo uses brand blue `#03549C`, a clean white document and a checkmark. The master SVG lives at `assets/icon.svg`; the automated build generates Chrome icon PNGs in 16, 32, 48 and 128 pixels and places them in the extension ZIP. Chrome's toolbar and extensions page now display the logo rather than the default letter icon.
+
+## Version 1.5.3 — Fix missing icons on Load unpacked
+
+The raw GitHub source ZIP no longer refers to PNG icons which have not been generated yet, so Chrome can load it for development (using a generic Chrome icon). For the full branded icon and bundled Harper grammar engine, use the successfully built **DO-Inspector-HP-v1.5.3** ZIP artifact from GitHub Actions, extract the inner ZIP and select its folder in Chrome via Load unpacked. The build now injects the PNG icons into the distribution manifest after generating them from assets/icon.svg.
