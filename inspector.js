@@ -6,6 +6,36 @@ const defaults={auto:false,expand:false,privacy:true,custom:""};
 let settings=defaults, field=null, original="", picking=false;
 let noteTimer=null, dirtyField=null, lastSuggestionKey="";
 let stopped=false, dismissed=false, minimized=false;
+let harperWorker=null, harperRequest=0;
+function startHarper() {
+  if(harperWorker||stopped)return;
+  try {
+    harperWorker=new Worker(chrome.runtime.getURL("harper-worker.js"));
+    harperWorker.onmessage=event=>{
+      if(stopped||event.data?.id!==harperRequest)return;
+      const hints=event.data?.messages||[];
+      const destination=el("di-harper");
+      if(!destination)return;
+      destination.replaceChildren();
+      if(hints.length){
+        const heading=document.createElement("strong");heading.textContent="Optional grammar suggestions";destination.append(heading);
+        for(const msg of hints.slice(0,5)){
+          const line=document.createElement("div");line.className="di-result info";line.textContent=msg;destination.append(line);
+        }
+      }
+    };
+    harperWorker.onerror=()=>{harperWorker?.terminate();harperWorker=null;};
+  }catch{harperWorker=null;}
+}
+function checkHarper(text){
+  if(!text||stopped)return;
+  startHarper();
+  if(harperWorker){
+    ++harperRequest;
+    harperWorker.postMessage({id:harperRequest,text});
+  }
+}
+
 function isCommentsPage(){
   return location.hostname.toLowerCase().replace(/^www\./,"")==="hotelplanner.com" &&
     /\/Common\/Popups\/ReservationXML\.htm$/i.test(location.pathname) &&
@@ -37,7 +67,7 @@ function parseHistory(text) {
 const panel=document.createElement("aside");panel.id="di-panel";panel.innerHTML=[
 '<header><div><b>DO Inspector HP</b><small>Writing assistance · live notes</small></div><div class="di-header-controls"><button id="di-stop" title="Stop monitoring" aria-label="Stop monitoring">Stop</button><button id="di-minimize" title="Minimize inspector" aria-label="Minimize inspector">−</button><button id="di-hide" title="Hide inspector" aria-label="Hide inspector">×</button></div></header>',
 '<nav><button data-page="review" class="active">Writing</button><button data-page="glossary">Abbreviations</button><button data-page="guide">Help</button></nav>',
-'<section id="di-review"><div class="di-line"><span id="di-field-label">No note field selected</span><button id="di-pick">Select field</button></div><label for="di-source">Original agent notes</label><textarea id="di-source" placeholder="Select a field or paste notes here"></textarea><div class="di-actions"><button id="di-analyze" class="primary">Check writing</button><button id="di-rewrite">Improve writing</button></div><div id="di-results" aria-live="polite">Writing suggestions will appear here.</div><label for="di-draft">Improved draft (editable)</label><textarea id="di-draft" placeholder="Click Improve writing, then review all facts"></textarea><div class="di-actions"><button id="di-copy">Copy draft</button><button id="di-apply" class="primary">Accept and apply</button></div><div class="di-actions" id="di-suggestion-actions" hidden><button id="di-reject">Reject suggestion</button></div></section>',
+'<section id="di-review"><div class="di-line"><span id="di-field-label">No note field selected</span><button id="di-pick">Select field</button></div><label for="di-source">Original agent notes</label><textarea id="di-source" placeholder="Select a field or paste notes here"></textarea><div class="di-actions"><button id="di-analyze" class="primary">Check writing</button><button id="di-rewrite">Improve writing</button></div><div id="di-results" aria-live="polite">Writing suggestions will appear here.</div><div id="di-harper" aria-live="polite"></div><label for="di-draft">Improved draft (editable)</label><textarea id="di-draft" placeholder="Click Improve writing, then review all facts"></textarea><div class="di-actions"><button id="di-copy">Copy draft</button><button id="di-apply" class="primary">Accept and apply</button></div><div class="di-actions" id="di-suggestion-actions" hidden><button id="di-reject">Reject suggestion</button></div></section>',
 '<section id="di-glossary" hidden><p>Approved terminology from your chart; team additions are optional.</p><input id="di-filter" placeholder="Search abbreviations"><div id="di-entries"></div></section>',
 '<section id="di-guide" hidden><p><b>1.</b> Select the actual notes field on the page.</p><p><b>2.</b> Continue typing. Optional writing improvements appear after you pause.</p><p><b>3.</b> Generate and review an optional improved draft.</p><p><b>4.</b> Apply it only after confirmation, then use the website’s own save button.</p><p>Never claim a refund, cancellation, call, approval, or guest promise occurred unless documented and verified. This extension does not read booking APIs or submit any data.</p><button id="di-settings">Settings</button></section>',
 '<footer id="di-status" role="status">No notes are uploaded or logged.</footer>'
@@ -58,7 +88,7 @@ function stopToggle(){
   panel.classList.toggle("di-stopped",stopped);
   launch.textContent=stopped?"DI ⏸":minimized?"DI −":"DI";
   el("di-status").textContent=stopped?"Inspector stopped. Monitoring and automatic corrections are paused.":"Inspector resumed. Monitoring is active.";
-  if(stopped){el("di-suggestion-actions").hidden=true;el("di-draft").value="";}
+  if(stopped){++harperRequest;el("di-harper").replaceChildren();el("di-suggestion-actions").hidden=true;el("di-draft").value="";if(harperWorker){harperWorker.terminate();harperWorker=null;}}
 }
 
 window.addEventListener("di-toggle",toggle);
@@ -82,6 +112,8 @@ function syncOriginalField(t) {
   el("di-source").value=current;
   // A previously generated draft is now out of date; never allow a stale correction.
   el("di-draft").value="";
+  el("di-harper").replaceChildren();
+  ++harperRequest;
   el("di-suggestion-actions").hidden=true;
   lastSuggestionKey="";
   el("di-results").textContent="Notes synced. An optional correction will appear after you pause.";
@@ -118,6 +150,7 @@ function suggestForField(t) {
   if(field!==t)selectField(t);
   else syncOriginalField(t);
   const improved=conservativeImprove(text);
+  checkHarper(improved);
   if(improved===text)return;
   el("di-draft").value=improved;
   inspect();
@@ -200,7 +233,7 @@ document.addEventListener("focusout",event=>{
   }
 },true);
 el("di-analyze").onclick=inspect;
-el("di-rewrite").onclick=()=>{if(stopped){el("di-status").textContent="Inspector stopped. Click Resume.";return;}const note=el("di-source").value.trim();if(!note){el("di-status").textContent="Enter notes first.";return;}if(parseHistory(note).length){el("di-status").textContent="Historical activity is read-only. Select a new agent note instead.";return;}el("di-draft").value=conservativeImprove(note);inspect();el("di-status").textContent="Draft ready: accept or reject; verify all facts.";el("di-suggestion-actions").hidden=false;};
+el("di-rewrite").onclick=()=>{if(stopped){el("di-status").textContent="Inspector stopped. Click Resume.";return;}const note=el("di-source").value.trim();if(!note){el("di-status").textContent="Enter notes first.";return;}if(parseHistory(note).length){el("di-status").textContent="Historical activity is read-only. Select a new agent note instead.";return;}el("di-draft").value=conservativeImprove(note);checkHarper(el("di-draft").value);inspect();el("di-status").textContent="Draft ready: accept or reject; verify all facts.";el("di-suggestion-actions").hidden=false;};
 el("di-reject").onclick=()=>{el("di-draft").value="";el("di-suggestion-actions").hidden=true;el("di-status").textContent="Suggestion rejected. Agent notes unchanged.";};
 el("di-copy").onclick=async()=>{if(!el("di-draft").value.trim()){el("di-status").textContent="Draft is empty.";return;}try{await navigator.clipboard.writeText(el("di-draft").value);el("di-status").textContent="Draft copied."}catch{el("di-draft").select();document.execCommand("copy");el("di-status").textContent="Copy attempted. Check your clipboard."}};
 el("di-apply").onclick=()=>{if(stopped){el("di-status").textContent="Inspector stopped. Click Resume.";return;}const draft=el("di-draft").value;if(!draft.trim()){el("di-status").textContent="No draft to apply.";return;}if(parseHistory(draft).length){el("di-status").textContent="Historical activity cannot be applied.";return;}if(!field||!field.isConnected||!editable(field)){el("di-status").textContent="Select a valid note field first.";return;}if(value(field)!==original){el("di-status").textContent="Field changed since selection. Reselect it to prevent overwriting new work.";return;}if(!confirm("Replace the selected note field with the reviewed draft? The extension will NOT save or submit it."))return;setValue(field,draft);original=draft;el("di-source").value=draft;el("di-suggestion-actions").hidden=true;el("di-status").textContent="Draft placed in field. Use the site's normal Save button."};
