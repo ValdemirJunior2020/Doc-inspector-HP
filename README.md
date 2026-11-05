@@ -64,3 +64,9 @@ The raw GitHub source ZIP no longer refers to PNG icons which have not been gene
 
 ## Version 1.5.4 — Consistent product name
 The extension, popup, panel, settings and packaged artifact use the official display name **Doc-Inspector-HP**.
+
+## Version 1.5.5 — Offline spelling fixes now appear in the improved draft
+
+The Harper worker sends a corrected draft back to the inspector instead of sending informational error messages only. The worker offers conservative single-word spelling fixes, with fallback corrections for common errors such as `upsett`, `becuz`, `tryed`, `answerd`, `refunnd`, and `tommorow`. Approved abbreviations, monetary amounts and H-prefixed itinerary numbers are protected. The agent's original note is never changed without Accept and Apply; delayed suggestions cannot overwrite an agent-edited or rejected draft.
+
+This is not a full AI rewrite; context-dependent grammar and punctuation may still require agent review.
