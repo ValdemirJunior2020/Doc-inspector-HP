@@ -70,3 +70,7 @@ Clicking **Add Note** navigates to the same ReservationXML page with the `#comme
 ## Version 1.1.0 — Auto-open Notes Inspector
 
 On ReservationXML.htm, clicking into the textarea beside the **Add Note** button automatically opens the on-page inspector, even before the URL gets the #comments fragment. It stays separate from Chrome's toolbar popup, which browsers cannot programmatically open. A draft suggestion appears after typing stops, and the user must explicitly accept any replacement. Reload the unpacked extension in chrome://extensions and refresh the reservation tab to activate the update.
+
+## Version 1.2.0 — Live Original Agent Notes
+
+When an agent types in the identified HotelPlanner Add Note editor, every keystroke is mirrored into **Original agent notes** in the inspector automatically. No need to retype, paste, inspect or click Select Field. The original HotelPlanner field remains the source of truth. If the agent edits the notes after a correction suggestion, the outdated suggestion is discarded. After typing pauses, a fresh correction can be offered. Acceptance is still mandatory before any field replacement. Historical/system activity is not rewritten.
