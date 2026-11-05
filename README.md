@@ -24,6 +24,12 @@ Version 1.0 prototype. The supplied video attachment was not a valid playable MP
 5. Apply to field: explicit confirmation required, and overwriting changed field text is blocked.
 6. Use the site's normal Save action. The extension does not save or submit notes by itself.
 
+## Automatic correction workflow
+
+When an agent types or finishes editing a likely notes field, the extension waits briefly, reads the draft, and offers a conservative correction. Nothing is changed unless the agent clicks **Accept and apply** and confirms. **Reject suggestion** discards the draft. Existing saved notes and history are read-only. The feature is configurable in Settings. It has not yet been tested on the production note editor.
+
+Timestamped activity pasted into the inspector is classified as system, automated activity, or agent note/review. A record attributed to an employee can still be an automated event (refund status, SMS, email, cancellation system logs). Classification is heuristic and is not evidence of who personally typed it or performed the action. Historical text cannot be rewritten or applied.
+
 ## Features
 
 - Dark, minimal floating sidebar with Inspector, Abbreviations and Guide tabs.
