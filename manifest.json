@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "DO Inspector HP",
+  "description": "Privacy-first documentation inspector for HotelPlanner notes. Review, improve and apply notes only with agent confirmation.",
+  "version": "1.0.0",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DO Inspector HP"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.hotelplanner.com/*",
+        "https://hotelplanner.com/*"
+      ],
+      "js": [
+        "inspector.js"
+      ],
+      "css": [
+        "inspector.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "icons": {},
+  "web_accessible_resources": []
+}
