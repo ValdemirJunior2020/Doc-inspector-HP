@@ -53,3 +53,7 @@ The Harper worker build is provided but has **not been executed or validated her
 ## Version 1.5.1 — Short ALL-CAPS fix
 
 Short notes are now corrected, including `I CANNOT` to `I cannot.` and `NO REFUND` to `No refund.` Approved abbreviations and H######## itineraries remain protected. Suggestions refresh automatically after an agent pauses typing, without taking keyboard focus away from the HotelPlanner editor. No changes are saved until an agent accepts them. CI runs capitalization regression tests before building the Chrome ZIP.
+
+## Version 1.5.2 — Chrome icon
+
+Custom logo uses brand blue `#03549C`, a clean white document and a checkmark. The master SVG lives at `assets/icon.svg`; the automated build generates Chrome icon PNGs in 16, 32, 48 and 128 pixels and places them in the extension ZIP. Chrome's toolbar and extensions page now display the logo rather than the default letter icon.
