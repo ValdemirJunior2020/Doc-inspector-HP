@@ -49,3 +49,7 @@ Harper is open source, Apache-2.0 licensed: https://github.com/Automattic/harper
 ### Safety and status
 
 The Harper worker build is provided but has **not been executed or validated here**, so do not claim the packaged extension is ready until CI succeeds and a live browser test passes. If the worker is unavailable, the normal casing/punctuation draft still works. No note is overwritten or saved without the agent's approval.
+
+## Version 1.5.1 — Short ALL-CAPS fix
+
+Short notes are now corrected, including `I CANNOT` to `I cannot.` and `NO REFUND` to `No refund.` Approved abbreviations and H######## itineraries remain protected. Suggestions refresh automatically after an agent pauses typing, without taking keyboard focus away from the HotelPlanner editor. No changes are saved until an agent accepts them. CI runs capitalization regression tests before building the Chrome ZIP.
