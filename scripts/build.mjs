@@ -5,7 +5,7 @@ import sharp from "sharp";
 const out=path.resolve("dist");
 await mkdir(out,{recursive:true});
 const manifest=JSON.parse(await readFile("manifest.json","utf8"));
-manifest.version="1.5.3";
+
 manifest.icons={"16":"icons/icon16.png","32":"icons/icon32.png","48":"icons/icon48.png","128":"icons/icon128.png"};
 manifest.action.default_icon={"16":"icons/icon16.png","32":"icons/icon32.png"};
 for(const file of ["manifest.json","inspector.js","inspector.css","popup.html","popup.js","options.html","options.js"])await copyFile(file,path.join(out,file));
