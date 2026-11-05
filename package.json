@@ -1,6 +1,6 @@
 {
   "name": "doc-inspector-hp",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "private": true,
   "type": "module",
   "description": "HotelPlanner agent writing helper with optional offline Harper grammar checking",
