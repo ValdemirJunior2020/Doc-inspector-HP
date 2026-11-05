@@ -8,7 +8,7 @@ let onmessage,posted;
 const context={
   LocalLinter:class{async lint(){return [];}},
   binaryInlined:{},
-  self:{addEventListener:(name,fn)=>{if(name==="message")onmessage=fn;},
+  self:{set onmessage(fn){onmessage=fn;},
     postMessage:(result)=>{posted=result;}}
 };
 vm.createContext(context);
