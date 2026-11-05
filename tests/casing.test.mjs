@@ -36,3 +36,9 @@ for(const bad of ["upsett","becuz","refunnd","tommorow","bussy","!!!","???",",,,
  assert.ok(!result.toLowerCase().includes(bad), `Still contains: ${bad}`);
 }
 console.log("Messy note grammar and punctuation regression passed");
+
+const readability=improve("After 20 minutes I called FD. GST said he wanted to CXL, but I cannot confirm the CXL was completed. I told him to call back tomorrow.");
+assert.ok(readability.includes("After 20 minutes, I called FD."));
+assert.ok(readability.includes("GST said he wanted to CXL"));
+assert.ok(readability.includes("I cannot confirm the CXL was completed."));
+console.log("Readability regression passed.");
