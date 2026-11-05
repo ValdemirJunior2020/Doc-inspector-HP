@@ -1,5 +1,6 @@
 import { LocalLinter } from "harper.js";
 import { binaryInlined } from "harper.js/binaryInlined";
+import { basicGrammarRules } from "./vendor/opengrammar/rules/categories/grammar.ts";
 
 // Private offline worker. It never sends notes to a network service.
 const linter = new LocalLinter({binary:binaryInlined});
@@ -42,9 +43,39 @@ function isSafeSingleWordCorrection(original,replacement,approved) {
   if(original.toLowerCase()===replacement.toLowerCase())return false;
   return true;
 }
+// Curated OpenGrammar rules, bundled locally. No backend, BYOK, or network calls.
+const OPEN_GRAMMAR_SAFE_IDS=new Set([
+  "alot","buyed","runned","goed","eated","comed","taked",
+  "bringed","thinked","knowed","shouldnt-missing-apos",
+  "couldnt-missing-apos","wouldnt-missing-apos",
+  "didnt-missing-apos","doesnt-missing-apos",
+  "isnt-missing-apos","arent-missing-apos",
+  "wasnt-missing-apos","werent-missing-apos"
+]);
+function applyOpenGrammarRules(text,approved) {
+  let current=text;
+  let fixes=0;
+  for(const rule of basicGrammarRules) {
+    if(!OPEN_GRAMMAR_SAFE_IDS.has(rule.id)||rule.type!=="regex")continue;
+    const issues=rule.check(current).sort((a,b)=>b.offset-a.offset);
+    for(const issue of issues) {
+      const original=current.slice(issue.offset,issue.offset+issue.length);
+      if(original!==issue.original)continue;
+      if(protectedWord(original,approved))continue;
+      // Only replace exact supported expressions. Do not infer actions or statuses.
+      if(!issue.suggestion||issue.suggestion===original)continue;
+      if(/\b(?:refund|approved|cancelled|canceled|pending|issued|processed|denied)\b/i.test(original))continue;
+      current=current.slice(0,issue.offset)+issue.suggestion+current.slice(issue.offset+issue.length);
+      fixes++;
+    }
+  }
+  return {text:current,fixes};
+}
 async function improve(text,approved) {
-  let output=replaceWordTypos(text,approved);
-  let count=output===text?0:1, remaining=0;
+  const localText=replaceWordTypos(text,approved);
+  const openGrammar=applyOpenGrammarRules(localText,approved);
+  let output=openGrammar.text;
+  let count=(localText===text?0:1)+openGrammar.fixes, remaining=0;
   // Harper is best-effort: if an API or model error occurs, retain all safe
   // local corrections rather than discarding them.
   try {
