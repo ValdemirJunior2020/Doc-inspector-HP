@@ -14,5 +14,5 @@ await mkdir(path.join(out,"icons"),{recursive:true});
 const sourceIcon=await readFile("assets/icon.svg");
 for(const size of [16,32,48,128]) await sharp(sourceIcon).resize(size,size).png().toFile(path.join(out,"icons",`icon${size}.png`));
 await build({entryPoints:["src/harper-worker-entry.js"],outfile:path.join(out,"harper-worker.js"),bundle:true,format:"iife",platform:"browser",target:["chrome120"],minify:true,logLevel:"warning",legalComments:"none",external:["fs"]});
-await writeFile(path.join(out,"THIRD-PARTY-NOTICES.txt"),"Harper, Copyright Automattic and contributors. Licensed under Apache License 2.0. https://github.com/Automattic/harper\n");
+await writeFile(path.join(out,"THIRD-PARTY-NOTICES.txt"),"Harper — Automattic and contributors. Apache-2.0. https://github.com/Automattic/harper\\nOpenGrammar — Swadhin Biswas and contributors. Curated upstream rules vendored in src/vendor/opengrammar/rules. Upstream repository LICENSE: Apache-2.0; backend package metadata: MIT. https://github.com/swadhinbiswas/opengrammar\\n");
 console.log("Chrome Web Store package files built in dist/ (version "+manifest.version+").");
