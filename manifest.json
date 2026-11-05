@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Doc-Inspector-HP",
   "description": "Offline agent writing assistant for HotelPlanner with optional grammar suggestions and approved abbreviations.",
-  "version": "1.5.7",
+  "version": "1.5.8",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Doc-Inspector-HP"
