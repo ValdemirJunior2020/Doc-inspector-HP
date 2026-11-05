@@ -6,36 +6,54 @@ const defaults={auto:false,expand:false,privacy:true,custom:""};
 let settings=defaults, field=null, original="", picking=false;
 let noteTimer=null, dirtyField=null, lastSuggestionKey="";
 let stopped=false, dismissed=false, minimized=false;
-let harperWorker=null, harperRequest=0;
+let harperWorker=null, harperRequest=0, pendingHarperDraft="";
 function startHarper() {
   if(harperWorker||stopped)return;
   try {
     harperWorker=new Worker(chrome.runtime.getURL("harper-worker.js"));
     harperWorker.onmessage=event=>{
       if(stopped||event.data?.id!==harperRequest)return;
-      const hints=event.data?.messages||[];
       const destination=el("di-harper");
-      if(!destination)return;
+      const draft=el("di-draft");
+      if(!destination||!draft)return;
+      const response=event.data||{};
       destination.replaceChildren();
-      if(hints.length){
-        const heading=document.createElement("strong");heading.textContent="Optional grammar suggestions";destination.append(heading);
-        for(const msg of hints.slice(0,5)){
-          const line=document.createElement("div");line.className="di-result info";line.textContent=msg;destination.append(line);
-        }
+      if(response.error){
+        destination.textContent="Offline spelling suggestions unavailable. Basic formatting still works.";
+        return;
+      }
+      // Never overwrite an agent's edits or a newer/rejected draft.
+      if(draft.value!==pendingHarperDraft)return;
+      if(typeof response.text==="string"&&response.text!==draft.value){
+        draft.value=response.text;
+        el("di-suggestion-actions").hidden=false;
+        el("di-status").textContent="Spelling and formatting corrections ready. Review, then Accept or Reject.";
+      } else if(draft.value===el("di-source").value.trim()){
+        el("di-suggestion-actions").hidden=true;
+      }
+      if(response.corrections>0){
+        const line=document.createElement("div");
+        line.className="di-result good";
+        line.textContent="Offline spelling corrections added to the draft. Please review names and booking details.";
+        destination.append(line);
       }
     };
-    harperWorker.onerror=()=>{harperWorker?.terminate();harperWorker=null;};
+    harperWorker.onerror=()=>{
+      harperWorker?.terminate();harperWorker=null;
+      const destination=el("di-harper");
+      if(destination)destination.textContent="Spelling checker could not load. Basic formatting remains available.";
+    };
   }catch{harperWorker=null;}
 }
 function checkHarper(text){
   if(!text||stopped)return;
   startHarper();
   if(harperWorker){
+    pendingHarperDraft=text;
     ++harperRequest;
-    harperWorker.postMessage({id:harperRequest,text});
+    harperWorker.postMessage({id:harperRequest,text,approved:Object.keys(dictionary())});
   }
 }
-
 function isCommentsPage(){
   return location.hostname.toLowerCase().replace(/^www\./,"")==="hotelplanner.com" &&
     /\/Common\/Popups\/ReservationXML\.htm$/i.test(location.pathname) &&
@@ -150,10 +168,9 @@ function suggestForField(t) {
   else syncOriginalField(t);
   lastSuggestionKey=key;
   const improved=conservativeImprove(text);
-  checkHarper(improved);
-  if(improved===text){el("di-draft").value="";el("di-suggestion-actions").hidden=true;return;}
   el("di-draft").value=improved;
   inspect();
+  checkHarper(improved);
   if(!dismissed&&!minimized)visible();
   el("di-status").textContent="Suggested correction ready. Accept with Apply to field, or Reject to leave notes unchanged.";
   el("di-suggestion-actions").hidden=false;
@@ -235,10 +252,10 @@ document.addEventListener("focusout",event=>{
   }
 },true);
 el("di-analyze").onclick=inspect;
-el("di-rewrite").onclick=()=>{if(stopped){el("di-status").textContent="Inspector stopped. Click Resume.";return;}const note=el("di-source").value.trim();if(!note){el("di-status").textContent="Enter notes first.";return;}if(parseHistory(note).length){el("di-status").textContent="Historical activity is read-only. Select a new agent note instead.";return;}el("di-draft").value=conservativeImprove(note);checkHarper(el("di-draft").value);inspect();el("di-status").textContent="Draft ready: accept or reject; verify all facts.";el("di-suggestion-actions").hidden=false;};
-el("di-reject").onclick=()=>{el("di-draft").value="";el("di-suggestion-actions").hidden=true;el("di-status").textContent="Suggestion rejected. Agent notes unchanged.";};
+el("di-rewrite").onclick=()=>{if(stopped){el("di-status").textContent="Inspector stopped. Click Resume.";return;}const note=el("di-source").value.trim();if(!note){el("di-status").textContent="Enter notes first.";return;}if(parseHistory(note).length){el("di-status").textContent="Historical activity is read-only. Select a new agent note instead.";return;}el("di-draft").value=conservativeImprove(note);inspect();checkHarper(el("di-draft").value);el("di-status").textContent="Draft ready: accept or reject; verify all facts.";el("di-suggestion-actions").hidden=false;};
+el("di-reject").onclick=()=>{++harperRequest;pendingHarperDraft="";el("di-harper").replaceChildren();el("di-draft").value="";el("di-suggestion-actions").hidden=true;el("di-status").textContent="Suggestion rejected. Agent notes unchanged.";};
 el("di-copy").onclick=async()=>{if(!el("di-draft").value.trim()){el("di-status").textContent="Draft is empty.";return;}try{await navigator.clipboard.writeText(el("di-draft").value);el("di-status").textContent="Draft copied."}catch{el("di-draft").select();document.execCommand("copy");el("di-status").textContent="Copy attempted. Check your clipboard."}};
-el("di-apply").onclick=()=>{if(stopped){el("di-status").textContent="Inspector stopped. Click Resume.";return;}const draft=el("di-draft").value;if(!draft.trim()){el("di-status").textContent="No draft to apply.";return;}if(parseHistory(draft).length){el("di-status").textContent="Historical activity cannot be applied.";return;}if(!field||!field.isConnected||!editable(field)){el("di-status").textContent="Select a valid note field first.";return;}if(value(field)!==original){el("di-status").textContent="Field changed since selection. Reselect it to prevent overwriting new work.";return;}if(!confirm("Replace the selected note field with the reviewed draft? The extension will NOT save or submit it."))return;setValue(field,draft);original=draft;el("di-source").value=draft;el("di-suggestion-actions").hidden=true;el("di-status").textContent="Draft placed in field. Use the site's normal Save button."};
+el("di-apply").onclick=()=>{if(stopped){el("di-status").textContent="Inspector stopped. Click Resume.";return;}const draft=el("di-draft").value;if(!draft.trim()){el("di-status").textContent="No draft to apply.";return;}if(parseHistory(draft).length){el("di-status").textContent="Historical activity cannot be applied.";return;}if(!field||!field.isConnected||!editable(field)){el("di-status").textContent="Select a valid note field first.";return;}if(value(field)!==original){el("di-status").textContent="Field changed since selection. Reselect it to prevent overwriting new work.";return;}if(!confirm("Replace the selected note field with the reviewed draft? The extension will NOT save or submit it."))return;++harperRequest;pendingHarperDraft="";setValue(field,draft);original=draft;el("di-source").value=draft;el("di-suggestion-actions").hidden=true;el("di-status").textContent="Draft placed in field. Use the site's normal Save button."};
 function glossary(){const q=el("di-filter").value.trim().toLowerCase();el("di-entries").innerHTML=Object.entries(dictionary()).filter(([k,v])=>(k+" "+v).toLowerCase().includes(q)).map(([k,v])=>'<div><b>'+encode(k)+'</b><span>'+encode(v)+'</span></div>').join("")||"No matches";}
 el("di-filter").oninput=glossary;
 el("di-settings").onclick=()=>chrome.runtime.openOptionsPage();
