@@ -81,3 +81,7 @@ The improved draft now applies a conservative set of common spelling corrections
 This release **bundles a curated subset of OpenGrammar's original grammar rules** (not its whole browser extension or server), in addition to Harper and local HotelPlanner-safe spelling and punctuation corrections. Original OpenGrammar source is vendored in `src/vendor/opengrammar/rules`. Only a narrowly approved set of unambiguous spelling/grammar corrections can be applied automatically to the proposed draft; the agent still chooses Accept or Reject. It runs entirely inside the extension without calling OpenGrammar's backend, any public endpoints, or an API key. Guest notes never leave the browser.
 
 OpenGrammar upstream: https://github.com/swadhinbiswas/opengrammar (root repository Apache-2.0 LICENSE; backend package metadata declares MIT). Refer to upstream for current licensing and attribution. No wholesale OpenGrammar server or telemetry has been included. The source is integrated as a compatibility-tested local subset rather than promising all OpenGrammar features.
+
+## v1.5.8 — More readable agent notes
+
+Adds narrowly scoped sentence-boundary and comma improvements to long notes while keeping refunds, cancellations, approvals, and follow-up statuses unchanged. This is an optional draft only; agents must accept any replacement. Regression tests cover uncertainty preservation and the established writing workflow.
