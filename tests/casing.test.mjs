@@ -18,6 +18,10 @@ for(const [given,expected] of [
   ["I CANNOT PROCESS REFUND","I cannot process refund."],
   ["GST SW FD","GST SW FD."],
   ["guest called to cancel","Guest called to cancel."],
-  ["HE PAID $114.52 AND SW FD","He paid $114.52 and SW FD."]
+  ["HE PAID $114.52 AND SW FD","He paid $114.52 and SW FD."],
+  ["GST WAS UPSETT BECUZ I TRYED TO CALL FD BUT NOBODY ANSWERD. REFUNND NOT APROVED.",
+   "GST was upset because I tried to call FD but nobody answered. Refund not approved."],
+  ["GST called becuz the reservaton was not in the sistem.", "GST called because the reservation was not in the system."],
+  ["TOMMOROW I WILL FALLOW UP", "Tomorrow I will follow up."]
 ]) assert.equal(improve(given),expected,JSON.stringify(given));
 console.log("Casing and punctuation regression tests passed");
