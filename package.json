@@ -1,12 +1,12 @@
 {
   "name": "doc-inspector-hp",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "private": true,
   "type": "module",
   "description": "HotelPlanner agent writing helper with optional offline Harper grammar checking",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --check inspector.js && node --check options.js && node --check popup.js && node --check src/harper-worker-entry.js && node tests/casing.test.mjs"
+    "test": "node --check inspector.js && node --check options.js && node --check popup.js && node --check src/harper-worker-entry.js && node tests/casing.test.mjs && node tests/spelling.test.mjs"
   },
   "dependencies": {
     "harper.js": "3.0.0"
