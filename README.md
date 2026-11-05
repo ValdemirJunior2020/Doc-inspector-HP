@@ -4,7 +4,7 @@ Private, privacy-first Chrome extension for HotelPlanner documentation review.
 
 ## Current status
 
-Version 1.0 prototype. The supplied video attachment was not a valid playable MP4, so the exact site's notes editor has not been verified. This version includes manual field selection rather than pretending the integration is proven.
+Version 1.1.0 prototype. The supplied video attachment was not a valid playable MP4, so the exact site's notes editor has not been verified. This version includes manual field selection rather than pretending the integration is proven.
 
 ## Install
 
@@ -66,3 +66,7 @@ Validate real note field behavior using a playable recording or a redacted scree
 ## HotelPlanner Add Note navigation
 
 Clicking **Add Note** navigates to the same ReservationXML page with the `#comments` fragment. The inspector now recognizes this fragment on any reservation, without using or storing a specific FIT_ID. It monitors likely agent note inputs and offers an Accept/Reject suggestion after 1.8 seconds of inactivity or shortly after the field loses focus. It never changes historical system or employee-attributed activity entries and does not automatically save any note. Exact compatibility with the live editor still requires a browser test.
+
+## Version 1.1.0 — Auto-open Notes Inspector
+
+On ReservationXML.htm, clicking into the textarea beside the **Add Note** button automatically opens the on-page inspector, even before the URL gets the #comments fragment. It stays separate from Chrome's toolbar popup, which browsers cannot programmatically open. A draft suggestion appears after typing stops, and the user must explicitly accept any replacement. Reload the unpacked extension in chrome://extensions and refresh the reservation tab to activate the update.
