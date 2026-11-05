@@ -75,3 +75,9 @@ This is not a full AI rewrite; context-dependent grammar and punctuation may sti
 The improved draft now applies a conservative set of common spelling corrections directly in the page, before optional Harper checking. This means short agent notes and test phrases such as "GST WAS UPSETT BECUZ I TRYED TO CALL FD BUT NOBODY ANSWERD" can display corrected spelling even when Harper cannot initialize. Added regression tests; original notes still require explicit agent acceptance before replacement.
 
 **Engine decision:** Keep the existing Harper offline engine optional rather than introducing OpenGrammar, a LanguageTool server, or a separate desktop program into a Chrome extension used during live calls. No network endpoint or personal guest text is sent to a third party. Domain abbreviations and itinerary IDs remain protected. Not every typo, tense, or punctuation issue is automatically fixable; agents review the draft.
+
+## Version 1.5.7 — Local OpenGrammar rules + Harper
+
+This release **bundles a curated subset of OpenGrammar's original grammar rules** (not its whole browser extension or server), in addition to Harper and local HotelPlanner-safe spelling and punctuation corrections. Original OpenGrammar source is vendored in `src/vendor/opengrammar/rules`. Only a narrowly approved set of unambiguous spelling/grammar corrections can be applied automatically to the proposed draft; the agent still chooses Accept or Reject. It runs entirely inside the extension without calling OpenGrammar's backend, any public endpoints, or an API key. Guest notes never leave the browser.
+
+OpenGrammar upstream: https://github.com/swadhinbiswas/opengrammar (root repository Apache-2.0 LICENSE; backend package metadata declares MIT). Refer to upstream for current licensing and attribution. No wholesale OpenGrammar server or telemetry has been included. The source is integrated as a compatibility-tested local subset rather than promising all OpenGrammar features.
