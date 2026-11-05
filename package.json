@@ -1,6 +1,6 @@
 {
   "name": "do-inspector-hp",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": true,
   "type": "module",
   "description": "HotelPlanner agent writing helper with optional offline Harper grammar checking",
@@ -12,6 +12,7 @@
     "harper.js": "3.0.0"
   },
   "devDependencies": {
-    "esbuild": "^0.25.12"
+    "esbuild": "^0.25.12",
+    "sharp": "^0.34.4"
   }
 }
