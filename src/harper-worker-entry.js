@@ -44,27 +44,29 @@ function isSafeSingleWordCorrection(original,replacement,approved) {
 }
 async function improve(text,approved) {
   let output=replaceWordTypos(text,approved);
-  let count=0, remaining=0;
-  // Re-lint after each replacement because Harper spans refer to the current text.
-  // Limit passes for responsiveness and avoid competing grammar edits.
-  for(let pass=0;pass<20;pass++){
-    const lints=await linter.lint(output,{language:"plaintext"});
-    let changed=false;
-    for(const lint of lints){
-      if(lint.suggestion_count()===0)continue;
-      const span=lint.span();
-      if(span.start>=span.end)continue;
-      const source=Array.from(output).slice(span.start,span.end).join("");
-      if(!/^[A-Za-z]+(?:['’][A-Za-z]+)?$/.test(source))continue;
-      const suggestions=lint.suggestions();
-      const replacement=suggestions[0]?.get_replacement_text?.();
-      if(typeof replacement!=="string"||!isSafeSingleWordCorrection(source,replacement,approved))continue;
-      // Only apply replacements which affect the same single word.
-      const next=await linter.applySuggestion(output,lint,suggestions[0]);
-      if(next===output)continue;
-      output=next;count++;changed=true;break;
+  let count=output===text?0:1, remaining=0;
+  // Harper is best-effort: if an API or model error occurs, retain all safe
+  // local corrections rather than discarding them.
+  try {
+    for(let pass=0;pass<12;pass++){
+      const lints=await linter.lint(output,{language:"plaintext"});
+      let changed=false;
+      for(const lint of lints){
+        const suggestions=lint.suggestions?.();
+        const span=lint.span?.();
+        if(!suggestions?.length||!span||span.start>=span.end)continue;
+        const source=Array.from(output).slice(span.start,span.end).join("");
+        if(!/^[A-Za-z]+(?:['’][A-Za-z]+)?$/.test(source))continue;
+        const replacement=suggestions[0]?.get_replacement_text?.();
+        if(typeof replacement!=="string"||!isSafeSingleWordCorrection(source,replacement,approved))continue;
+        const next=await linter.applySuggestion(output,lint,suggestions[0]);
+        if(next===output)continue;
+        output=next;count++;changed=true;break;
+      }
+      if(!changed){remaining=lints.length;break;}
     }
-    if(!changed){remaining=lints.length;break;}
+  } catch {
+    // Never roll back spelling corrections if Harper cannot lint a note.
   }
   return {text:output,corrected:count,remaining};
 }
