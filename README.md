@@ -1,0 +1,58 @@
+# DO Inspector HP
+
+Private, privacy-first Chrome extension for HotelPlanner documentation review.
+
+## Current status
+
+Version 1.0 prototype. The supplied video attachment was not a valid playable MP4, so the exact site's notes editor has not been verified. This version includes manual field selection rather than pretending the integration is proven.
+
+## Install
+
+1. Download this repository as a ZIP and extract it.
+2. Open Chrome and go to chrome://extensions.
+3. Turn on Developer mode.
+4. Click Load unpacked and select the extracted folder containing manifest.json.
+5. Visit a HotelPlanner page and click the purple DI button.
+6. For a Zendesk or other standard HTTPS page, click the extension toolbar icon and choose Open inspector on this tab.
+
+## Workflow
+
+1. Select field: click the actual notes input on the page.
+2. Inspect: read prompts for unclear wording, unresolved follow-ups, status ambiguity and potential payment-card numbers.
+3. Improve writing: conservative punctuation, capitalization and spacing cleanup, without adding facts or changing a booking status.
+4. Review and edit the draft.
+5. Apply to field: explicit confirmation required, and overwriting changed field text is blocked.
+6. Use the site's normal Save action. The extension does not save or submit notes by itself.
+
+## Features
+
+- Dark, minimal floating sidebar with Inspector, Abbreviations and Guide tabs.
+- All 28 approved abbreviations from the shared reference chart.
+- Additional terms and editable manual-verification checklist in Settings.
+- Optional expansion of approved abbreviations (off by default).
+- Copy the revised draft or apply to the selected field.
+- Local-only rule-based processing. No AI or paid API is required.
+- On HotelPlanner, launcher appears automatically; on other sites use user-invoked activation.
+- No hardcoded admin FIT_ID or agent login.
+- No booking APIs, tracking, analytics, note storage, or remote transmissions.
+- Only settings are kept in Chrome Sync.
+
+## Important safety rules
+
+- Results are documentation suggestions, not a QA score.
+- Do not assume requested refunds, cancellations, FOC approvals or callbacks occurred.
+- No automatic Matrix violations, Documentation 0, or AUTO ZERO.
+- Missing accessible documentation is not proof of a missing agent note.
+- No full credit card or other sensitive payment details should be entered into notes.
+- Site-specific verification is needed for editors inside iframes or frameworks that require custom event handling.
+
+## Source files
+
+- manifest.json: Chrome MV3 extension permissions and HotelPlanner page injection.
+- inspector.js and inspector.css: sidebar and inspection engine.
+- popup.html / popup.js: manual tab activation.
+- options.html / options.js: team preferences, abbreviations, checklist.
+
+## Next production milestones
+
+Validate real note field behavior using a playable recording or a redacted screenshot. Add Matrix-based reference checks with versioned approved policies. Introduce admin controls and optional AI only after access, privacy and hosting requirements have been approved.
