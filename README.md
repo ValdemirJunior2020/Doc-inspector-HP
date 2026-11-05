@@ -62,3 +62,7 @@ Timestamped activity pasted into the inspector is classified as system, automate
 ## Next production milestones
 
 Validate real note field behavior using a playable recording or a redacted screenshot. Add Matrix-based reference checks with versioned approved policies. Introduce admin controls and optional AI only after access, privacy and hosting requirements have been approved.
+
+## HotelPlanner Add Note navigation
+
+Clicking **Add Note** navigates to the same ReservationXML page with the `#comments` fragment. The inspector now recognizes this fragment on any reservation, without using or storing a specific FIT_ID. It monitors likely agent note inputs and offers an Accept/Reject suggestion after 1.8 seconds of inactivity or shortly after the field loses focus. It never changes historical system or employee-attributed activity entries and does not automatically save any note. Exact compatibility with the live editor still requires a browser test.
